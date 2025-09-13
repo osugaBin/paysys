@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Allow: /pay.html
+Allow: /service.html
+Allow: /Ali$.jpg
+Allow: /Wx$.jpg
+
+# 禁止搜索引擎索引测试页面
+Disallow: /pay-debug.html
+Disallow: /database-admin.html
+Disallow: /init-test-data.html
+Disallow: /src/
+
+Sitemap: https://osugaBin.github.io/paysys/sitemap.xml

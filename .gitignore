@@ -1,0 +1,14 @@
+# 生产环境忽略测试和调试文件
+pay-debug.html
+database-admin.html
+init-test-data.html
+
+# 开发文件
+.DS_Store
+*.log
+node_modules/
+.env
+
+# 临时文件
+*.tmp
+*.temp
