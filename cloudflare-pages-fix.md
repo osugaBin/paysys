@@ -22,8 +22,8 @@ _headers          # 安全头配置
 _redirects        # 重定向规则
 pay.html          # 主页面
 service.html      # 服务页面
-Ali$.jpg          # 支付宝二维码
-Wx$.jpg           # 微信二维码
+AliM.jpg          # 支付宝二维码
+WxM.jpg           # 微信二维码
 ```
 
 ### 步骤2: 验证 _headers 文件内容
@@ -113,7 +113,7 @@ git push origin main
 
 ### 错误3: 图片无法显示
 **原因**: 文件路径或权限问题
-**解决**: 确保图片文件已上传且路径正确
+**解决**: 确保图片文件 (AliM.jpg, WxM.jpg) 已上传且路径正确
 
 ### 错误4: JavaScript 功能异常
 **原因**: CSP 阻止内联脚本
