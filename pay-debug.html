@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PDF多页在线盖章工具 - 调试版</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background: white;
+        border-radius: 25px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+        position: relative;
+      }
+
+      /* 调试面板样式 */
+      .debug-panel {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 12px;
+        max-width: 300px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .debug-panel h4 {
+        margin-bottom: 10px;
+        color: #4CAF50;
+      }
+
+      .debug-info {
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      .debug-controls {
+        margin-top: 15px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .debug-btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .debug-btn.success {
+        background: #4CAF50;
+        color: white;
+      }
+
+      .debug-btn.danger {
+        background: #f44336;
+        color: white;
+      }
+
+      .debug-btn.info {
+        background: #2196F3;
+        color: white;
+      }
+
+      .debug-btn.warning {
+        background: #ff9800;
+        color: white;
+      }
+
+      /* VIP选择样式 - 增强版 */
+      .vip-selection {
+        margin: 20px 0;
+      }
+
+      .vip-selection h3 {
+        font-size: 18px;
+        margin-bottom: 15px;
+        color: #333;
+        text-align: center;
+      }
+
+      .vip-options {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 25px;
+      }
+
+      .vip-option {
+        flex: 1;
+        cursor: pointer;
+        transform: translateY(0);
+        transition: all 0.3s ease;
+      }
+
+      .vip-option:hover {
+        transform: translateY(-5px);
+      }
+
+      .vip-option-inner {
+        border: 3px solid #e0e0e0;
+        border-radius: 15px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: linear-gradient(145deg, #ffffff, #f0f0f0);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .vip-option-inner::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.5s;
+      }
+
+      .vip-option-inner:hover::before {
+        left: 100%;
+      }
+
+      .vip-option-inner.selected {
+        border-color: #4caf50;
+        background: linear-gradient(145deg, #f0f9f0, #e8f5e8);
+        box-shadow: 0 10px 25px rgba(76, 175, 80, 0.3);
+        transform: scale(1.05);
+      }
+
+      .vip-option h4 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .vip-price {
+        font-size: 28px;
+        font-weight: bold;
+        color: #e53935;
+        margin-bottom: 8px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .vip-duration {
+        color: #666;
+        margin-bottom: 12px;
+        font-size: 16px;
+      }
+
+      .vip-tag {
+        display: inline-block;
+        background: linear-gradient(45deg, #ffecb3, #fff3c4);
+        color: #ff6f00;
+        font-size: 12px;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      }
+
+      #vip-weekly .vip-tag {
+        background: linear-gradient(45deg, #e8f5e9, #f1f8e9);
+        color: #2e7d32;
+      }
+
+      /* 使用说明模块样式 - 调试版 */
+      .usage-guide {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 30px;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      .usage-guide h2 {
+        color: #2c3e50;
+        font-size: 22px;
+        margin-bottom: 25px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .guide-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 35px;
+        max-width: 100%;
+      }
+
+      .guide-column {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid #3498db;
+        transition: all 0.3s ease;
+      }
+
+      .guide-column:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .guide-column h3 {
+        color: #2c3e50;
+        font-size: 18px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .guide-column ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .guide-column li {
+        margin-bottom: 12px;
+        padding-left: 25px;
+        position: relative;
+        line-height: 1.6;
+        color: #555;
+        font-size: 15px;
+      }
+
+      .guide-column li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #27ae60;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .feature-highlight {
+        background: linear-gradient(145deg, #e8f5e9 0%, #f1f8e9 100%);
+        border-left-color: #27ae60;
+      }
+
+      .feature-highlight h3 {
+        color: #2e7d32;
+      }
+
+      .feature-highlight li:before {
+        color: #2e7d32;
+      }
+
+      /* 使用说明模块样式 - 调试版 */
+      .usage-guide {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 30px;
+        border-bottom: 2px solid #dee2e6;
+      }
+
+      .usage-guide h2 {
+        color: #2c3e50;
+        font-size: 22px;
+        margin-bottom: 25px;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .guide-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 35px;
+        max-width: 100%;
+      }
+
+      .guide-column {
+        background: white;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        border-left: 5px solid #3498db;
+        transition: all 0.3s ease;
+      }
+
+      .guide-column:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      }
+
+      .guide-column h3 {
+        color: #2c3e50;
+        font-size: 18px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .guide-column ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      .guide-column li {
+        margin-bottom: 12px;
+        padding-left: 25px;
+        position: relative;
+        line-height: 1.6;
+        color: #555;
+        font-size: 15px;
+      }
+
+      .guide-column li:before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #27ae60;
+        font-weight: bold;
+        font-size: 16px;
+      }
+
+      .feature-highlight {
+        background: linear-gradient(145deg, #e8f5e9 0%, #f1f8e9 100%);
+        border-left-color: #27ae60;
+      }
+
+      .feature-highlight h3 {
+        color: #2e7d32;
+      }
+
+      .feature-highlight li:before {
+        color: #2e7d32;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        position: relative;
+      }
+
+      .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+      }
+
+      .header h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .header p {
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+      }
+
+      .content {
+        padding: 35px;
+      }
+
+      .order-info {
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border: 1px solid #dee2e6;
+      }
+
+      .order-info h3 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+      }
+
+      .order-info h3 i {
+        margin-right: 12px;
+        color: #3498db;
+      }
+
+      .order-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+
+      .detail-item {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      }
+
+      .detail-item .label {
+        font-weight: 600;
+        color: #7f8c8d;
+        margin-bottom: 5px;
+      }
+
+      .detail-item .value {
+        color: #2c3e50;
+        font-size: 16px;
+      }
+
+      .payment-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 35px;
+      }
+
+      .qrcode-container {
+        background: linear-gradient(145deg, #ffffff, #f8f9fa);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        margin-bottom: 25px;
+        position: relative;
+        border: 2px solid #e9ecef;
+      }
+
+      .qrcode-wrapper {
+        display: flex;
+        justify-content: center;
+        gap: 50px;
+        margin: 25px 0;
+      }
+
+      .qrcode-item {
+        text-align: center;
+      }
+
+      .qrcode-item h4 {
+        margin-bottom: 20px;
+        color: #2c3e50;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .qrcode {
+        width: 220px;
+        height: 220px;
+        background: linear-gradient(145deg, #f8f9fa, #ffffff);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border: 3px dashed #3498db;
+        border-radius: 15px;
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+      }
+
+      .qrcode:hover {
+        transform: scale(1.05);
+        box-shadow: 0 10px 25px rgba(52, 152, 219, 0.3);
+      }
+
+      .qrcode img {
+        width: 90%;
+        height: 90%;
+        object-fit: contain;
+        border-radius: 10px;
+      }
+
+      .amount {
+        font-size: 32px;
+        font-weight: 700;
+        color: #e74c3c;
+        margin: 20px 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .timer {
+        color: #e74c3c;
+        font-weight: 600;
+        margin-bottom: 20px;
+        font-size: 18px;
+        background: rgba(231, 76, 60, 0.1);
+        padding: 10px 20px;
+        border-radius: 25px;
+      }
+
+      .status-indicator {
+        padding: 15px 25px;
+        border-radius: 30px;
+        background: #f8f9fa;
+        margin: 25px 0;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.3s;
+        font-size: 16px;
+      }
+
+      .status-pending {
+        background: linear-gradient(145deg, #ffefd9, #fff8e1);
+        color: #f39c12;
+        border: 2px solid #f39c12;
+      }
+
+      .status-success {
+        background: linear-gradient(145deg, #d4f8e8, #e8f5e9);
+        color: #27ae60;
+        border: 2px solid #27ae60;
+      }
+
+      .status-failed {
+        background: linear-gradient(145deg, #fde3e3, #ffebee);
+        color: #e74c3c;
+        border: 2px solid #e74c3c;
+      }
+
+      .instructions {
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border-left: 5px solid #3498db;
+      }
+
+      .instructions h3 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        font-size: 20px;
+      }
+
+      .instructions h3 i {
+        margin-right: 12px;
+        color: #f39c12;
+      }
+
+      .instructions ol {
+        padding-left: 25px;
+      }
+
+      .instructions li {
+        margin-bottom: 12px;
+        line-height: 1.8;
+        font-size: 16px;
+      }
+
+      .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        padding: 18px 35px;
+        border: none;
+        border-radius: 15px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s;
+      }
+
+      .btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(145deg, #3498db, #2980b9);
+        color: white;
+        box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(52, 152, 219, 0.6);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(145deg, #95a5a6, #7f8c8d);
+        color: white;
+        box-shadow: 0 5px 15px rgba(149, 165, 166, 0.4);
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(149, 165, 166, 0.6);
+      }
+
+      .btn-trial {
+        background: linear-gradient(145deg, #8bc34a, #689f38);
+        color: white;
+        box-shadow: 0 5px 15px rgba(139, 195, 74, 0.4);
+      }
+
+      .btn-trial:hover {
+        background: linear-gradient(145deg, #689f38, #558b2f);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(139, 195, 74, 0.6);
+      }
+
+      .footer {
+        text-align: center;
+        padding: 25px;
+        color: #7f8c8d;
+        font-size: 14px;
+        background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+        border-top: 1px solid #dee2e6;
+      }
+
+      /* 响应式设计 */
+      @media (max-width: 768px) {
+        .debug-panel {
+          position: relative;
+          top: 0;
+          right: 0;
+          margin-bottom: 20px;
+        }
+
+        .guide-content {
+          grid-template-columns: 1fr;
+          gap: 25px;
+        }
+        
+        .usage-guide {
+          padding: 25px;
+        }
+
+        .guide-column {
+          padding: 20px;
+        }
+
+        .order-details {
+          grid-template-columns: 1fr;
+        }
+
+        .qrcode-wrapper {
+          flex-direction: column;
+          gap: 30px;
+        }
+
+        .qrcode {
+          width: 200px;
+          height: 200px;
+        }
+
+        .action-buttons {
+          flex-direction: column;
+        }
+
+        .vip-options {
+          flex-direction: column;
+          gap: 15px;
+        }
+      }
+
+      /* 动画效果 */
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      .status-pending {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .container {
+        animation: slideIn 0.5s ease-out;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 调试面板 -->
+    <div class="debug-panel" id="debugPanel">
+      <h4><i class="fas fa-bug"></i> 调试面板</h4>
+      <div class="debug-info">
+        <span>设备ID:</span>
+        <span id="debugDeviceId">-</span>
+      </div>
+      <div class="debug-info">
+        <span>VIP状态:</span>
+        <span id="debugVipStatus">未激活</span>
+      </div>
+      <div class="debug-info">
+        <span>剩余时间:</span>
+        <span id="debugTimeLeft">-</span>
+      </div>
+      <div class="debug-info">
+        <span>当前套餐:</span>
+        <span id="debugCurrentPlan">日卡</span>
+      </div>
+      <div class="debug-info">
+        <span>订单编号:</span>
+        <span id="debugOrderNumber">-</span>
+      </div>
+      <div class="debug-controls">
+        <button class="debug-btn success" onclick="debugActivateVip()">激活VIP</button>
+        <button class="debug-btn danger" onclick="debugClearVip()">清除VIP</button>
+        <button class="debug-btn info" onclick="debugAddTime()">+1小时</button>
+        <button class="debug-btn warning" onclick="debugTogglePanel()">隐藏面板</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="header">
+        <h1><i class="fas fa-qrcode"></i> PDF多页在线盖章工具</h1>
+        <p>请完成支付以使用服务 - 先用再付亦可 - 调试版本</p>
+      </div>
+
+      <!-- 使用说明模块 -->
+      <div class="usage-guide">
+        <h2><i class="fas fa-info-circle"></i> 系统使用说明</h2>
+        <div class="guide-content">
+          <div class="guide-column">
+            <h3><i class="fas fa-mobile-alt"></i> 支付流程</h3>
+            <ul>
+              <li>选择VIP套餐类型（日卡/周卡）</li>
+              <li>使用支付宝或微信扫描二维码</li>
+              <li>确认支付金额并完成付款</li>
+              <li>系统自动激活VIP服务</li>
+              <li>跳转至专属服务页面</li>
+            </ul>
+          </div>
+          <div class="guide-column feature-highlight">
+            <h3><i class="fas fa-shield-alt"></i> 核心功能</h3>
+            <ul>
+              <li>机器码识别与设备绑定技术</li>
+              <li>单机授权使用，安全可靠</li>
+              <li>日卡(￥3.3/天)和周卡(￥9.9/7天)</li>
+              <li>精确时效管理，到期自动失效</li>
+              <li>跨设备防盗用保护机制</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="order-info">
+          <h3><i class="fas fa-info-circle"></i> 订单信息</h3>
+
+          <!-- VIP类型选择 -->
+          <div class="vip-selection">
+            <h3>选择VIP类型</h3>
+            <div class="vip-options">
+              <div class="vip-option" id="vip-daily" onclick="selectVipType('daily')">
+                <div class="vip-option-inner selected">
+                  <h4>日卡</h4>
+                  <div class="vip-price">￥3.3</div>
+                  <div class="vip-duration">1天</div>
+                  <div class="vip-tag">经济实惠</div>
+                </div>
+              </div>
+              <div class="vip-option" id="vip-weekly" onclick="selectVipType('weekly')">
+                <div class="vip-option-inner">
+                  <h4>周卡</h4>
+                  <div class="vip-price">￥9.9</div>
+                  <div class="vip-duration">7天</div>
+                  <div class="vip-tag">超值推荐</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="order-details">
+            <div class="detail-item">
+              <div class="label">订单编号</div>
+              <div class="value" id="order-number">ORD-2025-1001</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">商品名称</div>
+              <div class="value" id="product-name">VIP会员服务（1天）</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">使用期限</div>
+              <div class="value" id="product-duration">1天</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">设备绑定</div>
+              <div class="value" id="device-info">当前设备</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">创建时间</div>
+              <div class="value">2023-11-05 14:30:22</div>
+            </div>
+            <div class="detail-item">
+              <div class="label">支付方式</div>
+              <div class="value">扫码支付</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="payment-section">
+          <div class="qrcode-container">
+            <h3>请选择支付方式扫描二维码完成支付</h3>
+            <div class="qrcode-wrapper">
+              <div class="qrcode-item">
+                <h4>
+                  <i class="fab fa-alipay" style="color: #1677ff"></i>支付宝
+                </h4>
+                <div class="qrcode">
+                  <img src="Ali$.jpg" alt="支付宝二维码" />
+                </div>
+              </div>
+              <div class="qrcode-item">
+                <h4>
+                  <i class="fab fa-weixin" style="color: #07c160"></i>微信支付
+                </h4>
+                <div class="qrcode">
+                  <img src="Wx$.jpg" alt="微信支付二维码" />
+                </div>
+              </div>
+            </div>
+            <div class="amount">￥3.3</div>
+            <div class="timer">剩余时间: 14:59</div>
+          </div>
+
+
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-primary" id="simulate-payment">
+            <i class="fas fa-check-circle"></i> 支付成功，进入服务
+          </button>
+          <button class="btn btn-trial" id="simulate-failure">
+            <i class="fas fa-eye"></i> 稍后支付，我先试试
+          </button>
+        </div>
+      </div>
+
+      <div class="footer">
+        <p>© 在线盖章系统 | PZYT.Ltd | 技术支持: 66617886@qq.com | 调试版本 v2.1</p>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const simulatePaymentBtn = document.getElementById("simulate-payment");
+        const simulateFailureBtn = document.getElementById("simulate-failure");
+        const productNameElement = document.getElementById("product-name");
+        const productPriceElement = document.querySelector(".amount");
+        const productDurationElement = document.getElementById("product-duration");
+
+        // 订单编号生成和D1数据库保存功能
+        function generateOrderNumber() {
+          // 从localStorage获取当前订单号，如果不存在则从1001开始
+          let currentOrderNum = localStorage.getItem('current_order_number');
+          if (!currentOrderNum) {
+            currentOrderNum = 1001;
+          } else {
+            currentOrderNum = parseInt(currentOrderNum) + 1;
+          }
+          
+          // 保存新的订单号到localStorage
+          localStorage.setItem('current_order_number', currentOrderNum);
+          
+          // 获取当前系统年份
+          const currentYear = new Date().getFullYear();
+          
+          // 生成完整的订单编号，使用当前年份
+          const orderNumber = `ORD-${currentYear}-${currentOrderNum}`;
+          
+          // 更新页面显示
+          document.getElementById('order-number').textContent = orderNumber;
+          
+          return orderNumber;
+        }
+
+        // 保存订单到D1数据库的模拟函数
+        async function saveOrderToD1(orderData) {
+          try {
+            // 这里是D1数据库保存的模拟实现
+            // 在实际部署时需要连接到Cloudflare D1数据库
+            console.log('保存订单到D1数据库:', orderData);
+            
+            // 模拟API调用
+            const response = await fetch('/api/orders', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(orderData)
+            });
+            
+            if (response.ok) {
+              console.log('订单已成功保存到D1数据库');
+              return true;
+            } else {
+              console.error('保存订单失败:', response.statusText);
+              return false;
+            }
+          } catch (error) {
+            console.error('D1数据库连接错误:', error);
+            // 降级到本地存储
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push(orderData);
+            localStorage.setItem('orders', JSON.stringify(orders));
+            console.log('订单已保存到本地存储作为备份');
+            return true;
+          }
+        }
+
+        // 页面加载时生成新的订单编号
+        const currentOrderNumber = generateOrderNumber();
+
+        // VIP类型配置
+        const vipTypes = {
+          daily: {
+            name: "VIP会员服务（1天）",
+            price: "￥3.3",
+            duration: "1天",
+            expiryHours: 24,
+          },
+          weekly: {
+            name: "VIP会员服务（7天）",
+            price: "￥9.9",
+            duration: "7天",
+            expiryHours: 24 * 7,
+          },
+        };
+
+        // 当前选中的VIP类型，默认为日卡
+        let currentVipType = 'daily';
+
+        // 调试功能
+        let debugPanelVisible = true;
+
+        // 选择VIP类型
+        window.selectVipType = function (type) {
+          currentVipType = type;
+          
+          // 更新选中状态
+          document.querySelectorAll(".vip-option-inner").forEach((el) => {
+            el.classList.remove("selected");
+          });
+          document
+            .querySelector(`#vip-${type} .vip-option-inner`)
+            .classList.add("selected");
+
+          // 更新订单信息
+          productNameElement.textContent = vipTypes[type].name;
+          productPriceElement.textContent = vipTypes[type].price;
+          productDurationElement.textContent = vipTypes[type].duration;
+
+          // 更新调试面板
+          updateDebugPanel();
+        };
+
+        // 设备绑定功能
+        function generateDeviceFingerprint() {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          ctx.textBaseline = "top";
+          ctx.font = "14px Arial";
+          ctx.fillText("Device fingerprint", 2, 2);
+
+          const fingerprint = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width + "x" + screen.height,
+            new Date().getTimezoneOffset(),
+            canvas.toDataURL(),
+          ].join("|");
+
+          return btoa(fingerprint).substring(0, 16);
+        }
+
+        // 显示设备信息
+        const deviceId = generateDeviceFingerprint();
+        document.getElementById("device-info").textContent = `设备ID: ${deviceId}`;
+
+        // 更新调试面板
+        function updateDebugPanel() {
+          document.getElementById("debugDeviceId").textContent = deviceId;
+          document.getElementById("debugCurrentPlan").textContent = 
+            currentVipType === 'daily' ? '日卡' : '周卡';
+          document.getElementById("debugOrderNumber").textContent = currentOrderNumber;
+          
+          const savedDeviceId = localStorage.getItem("vip_device_id");
+          const expiryTime = localStorage.getItem("vip_expiry");
+          const isActive = localStorage.getItem("vip_active");
+
+          if (isActive === "true" && savedDeviceId === deviceId && expiryTime) {
+            const remainingTime = Math.max(0, Math.ceil(
+              (parseInt(expiryTime) - new Date().getTime()) / (1000 * 60 * 60)
+            ));
+            document.getElementById("debugVipStatus").textContent = "已激活";
+            document.getElementById("debugTimeLeft").textContent = `${remainingTime}小时`;
+          } else {
+            document.getElementById("debugVipStatus").textContent = "未激活";
+            document.getElementById("debugTimeLeft").textContent = "-";
+          }
+        }
+
+        // 调试功能
+        window.debugActivateVip = function() {
+          const expiryHours = vipTypes[currentVipType].expiryHours;
+          const expiryTime = new Date().getTime() + expiryHours * 60 * 60 * 1000;
+          localStorage.setItem("vip_device_id", deviceId);
+          localStorage.setItem("vip_expiry", expiryTime);
+          localStorage.setItem("vip_active", "true");
+          localStorage.setItem("vip_type", currentVipType);
+          updateDebugPanel();
+          alert("VIP已激活！");
+        };
+
+        window.debugClearVip = function() {
+          localStorage.removeItem("vip_device_id");
+          localStorage.removeItem("vip_expiry");
+          localStorage.removeItem("vip_active");
+          localStorage.removeItem("vip_type");
+          updateDebugPanel();
+          alert("VIP状态已清除！");
+        };
+
+        window.debugAddTime = function() {
+          const expiryTime = localStorage.getItem("vip_expiry");
+          if (expiryTime) {
+            const newExpiryTime = parseInt(expiryTime) + 60 * 60 * 1000; // 加1小时
+            localStorage.setItem("vip_expiry", newExpiryTime);
+            updateDebugPanel();
+            alert("已添加1小时！");
+          } else {
+            alert("请先激活VIP！");
+          }
+        };
+
+        window.debugTogglePanel = function() {
+          const panel = document.getElementById("debugPanel");
+          debugPanelVisible = !debugPanelVisible;
+          panel.style.display = debugPanelVisible ? 'block' : 'none';
+        };
+
+        // 检查VIP状态和设备绑定
+        function checkVIPStatus() {
+          const savedDeviceId = localStorage.getItem("vip_device_id");
+          const expiryTime = localStorage.getItem("vip_expiry");
+          const isActive = localStorage.getItem("vip_active");
+
+          if (savedDeviceId && savedDeviceId !== deviceId) {
+            alert("此VIP服务已绑定到其他设备，无法在当前设备使用！");
+            return false;
+          }
+
+          if (expiryTime && new Date().getTime() > parseInt(expiryTime)) {
+            alert("VIP服务已过期，请重新购买！");
+            localStorage.removeItem("vip_device_id");
+            localStorage.removeItem("vip_expiry");
+            localStorage.removeItem("vip_active");
+            return false;
+          }
+
+          if (isActive === "true" && savedDeviceId === deviceId) {
+            const remainingTime = Math.ceil(
+              (parseInt(expiryTime) - new Date().getTime()) / (1000 * 60 * 60)
+            );
+            // 显示VIP已激活状态
+            document.querySelector(".container").innerHTML = `
+               <div style="text-align: center; padding: 50px; background: linear-gradient(145deg, #f8f9fa, #e8f5e8); border-radius: 20px; margin: 20px;">
+                 <div style="color: #4CAF50; font-size: 64px; margin-bottom: 30px;">
+                   <i class="fas fa-check-circle"></i>
+                 </div>
+                 <h2 style="color: #4CAF50; margin-bottom: 25px; font-size: 32px;">VIP服务已激活</h2>
+                 <p style="font-size: 24px; color: #666; margin-bottom: 25px;">剩余时间：${remainingTime}小时</p>
+                 <p style="color: #999; margin-bottom: 35px; font-size: 16px;">设备ID: ${deviceId}</p>
+                 <div style="background: linear-gradient(145deg, #e8f5e8, #f1f8e9); padding: 20px; border-radius: 15px; margin-bottom: 35px; border: 2px solid #4CAF50;">
+                   <p style="color: #2e7d32; margin: 0; font-size: 18px;">✓ 您的VIP服务正在运行中，无需重复支付</p>
+                 </div>
+                 <button onclick="redirectToService()" style="background: linear-gradient(145deg, #4CAF50, #45a049); color: white; border: none; padding: 20px 40px; border-radius: 15px; font-size: 18px; cursor: pointer; box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4); transition: all 0.3s;">进入服务页面</button>
+               </div>
+             `;
+
+            // 添加跳转函数
+            window.redirectToService = function () {
+              window.location.href = 'service.html';
+            };
+
+            return true;
+          }
+
+          return false;
+        }
+
+        // 模拟支付成功
+        simulatePaymentBtn.addEventListener("click", async function () {
+          // 保存设备绑定信息和过期时间
+          const expiryHours = vipTypes[currentVipType].expiryHours;
+          const expiryTime = new Date().getTime() + expiryHours * 60 * 60 * 1000;
+          localStorage.setItem("vip_device_id", deviceId);
+          localStorage.setItem("vip_expiry", expiryTime);
+          localStorage.setItem("vip_active", "true");
+          localStorage.setItem("vip_type", currentVipType);
+
+          // 创建订单数据
+          const orderData = {
+            orderNumber: currentOrderNumber,
+            deviceId: deviceId,
+            vipType: currentVipType,
+            productName: vipTypes[currentVipType].name,
+            price: vipTypes[currentVipType].price,
+            duration: vipTypes[currentVipType].duration,
+            expiryTime: expiryTime,
+            paymentStatus: 'success',
+            paymentMethod: 'qrcode',
+            createTime: new Date().toISOString(),
+            updateTime: new Date().toISOString()
+          };
+
+          // 保存订单到D1数据库
+          await saveOrderToD1(orderData);
+
+          // 更新调试面板
+          updateDebugPanel();
+
+          // 支付成功后跳转到服务页面
+          window.location.href = 'service.html';
+        });
+
+        // 稍后支付，我先试试
+        simulateFailureBtn.addEventListener("click", async function () {
+          // 保存设备绑定信息和过期时间（与支付成功相同）
+          const expiryHours = vipTypes[currentVipType].expiryHours;
+          const expiryTime = new Date().getTime() + expiryHours * 60 * 60 * 1000;
+          localStorage.setItem("vip_device_id", deviceId);
+          localStorage.setItem("vip_expiry", expiryTime);
+          localStorage.setItem("vip_active", "true");
+          localStorage.setItem("vip_type", currentVipType);
+
+          // 创建订单数据（试用状态）
+          const orderData = {
+            orderNumber: currentOrderNumber,
+            deviceId: deviceId,
+            vipType: currentVipType,
+            productName: vipTypes[currentVipType].name,
+            price: vipTypes[currentVipType].price,
+            duration: vipTypes[currentVipType].duration,
+            expiryTime: expiryTime,
+            paymentStatus: 'trial',
+            paymentMethod: 'trial',
+            createTime: new Date().toISOString(),
+            updateTime: new Date().toISOString()
+          };
+
+          // 保存订单到D1数据库
+          await saveOrderToD1(orderData);
+
+          // 更新调试面板
+          updateDebugPanel();
+
+          // 直接跳转到服务页面
+          setTimeout(() => {
+            window.location.href = 'service.html';
+          }, 1000);
+        });
+
+        // 模拟倒计时功能
+        let timeLeft = 15 * 60; // 15分钟
+        const timerElement = document.querySelector(".timer");
+
+        function updateTimer() {
+          const minutes = Math.floor(timeLeft / 60);
+          const seconds = timeLeft % 60;
+          timerElement.textContent = `剩余时间: ${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+          if (timeLeft > 0) {
+            timeLeft--;
+            setTimeout(updateTimer, 1000);
+          } else {
+            timerElement.textContent = "支付超时，请刷新页面重新获取二维码";
+            timerElement.style.color = "#e74c3c";
+          }
+        }
+
+        // 页面加载时检查VIP状态和更新调试面板
+        updateDebugPanel();
+        if (!checkVIPStatus()) {
+          updateTimer();
+        }
+
+        // 定期更新调试面板
+        setInterval(updateDebugPanel, 5000);
+      });
+    </script>
+  </body>
+</html>

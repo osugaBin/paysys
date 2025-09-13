@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D1数据库管理 - PDF多页在线盖章工具</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(145deg, #f8f9fa, #e9ecef);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border-left: 5px solid #3498db;
+        }
+
+        .stat-card.success {
+            border-left-color: #27ae60;
+        }
+
+        .stat-card.warning {
+            border-left-color: #f39c12;
+        }
+
+        .stat-card.info {
+            border-left-color: #3498db;
+        }
+
+        .stat-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(145deg, #27ae60, #229954);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(145deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .table-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .table th {
+            background: linear-gradient(145deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13px;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4f8e8;
+            color: #27ae60;
+        }
+
+        .status-trial {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            background: #d4f8e8;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .json-viewer {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-database"></i> D1数据库管理面板</h1>
+            <p>PDF多页在线盖章工具 - 订单数据管理</p>
+        </div>
+
+        <div class="content">
+            <!-- 统计信息 -->
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <h3><i class="fas fa-check-circle"></i> 成功支付</h3>
+                    <div class="stat-value" id="successCount">0</div>
+                    <div class="stat-label">笔订单</div>
+                </div>
+                <div class="stat-card warning">
+                    <h3><i class="fas fa-eye"></i> 试用订单</h3>
+                    <div class="stat-value" id="trialCount">0</div>
+                    <div class="stat-label">笔订单</div>
+                </div>
+                <div class="stat-card info">
+                    <h3><i class="fas fa-list"></i> 总订单数</h3>
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">笔订单</div>
+                </div>
+                <div class="stat-card info">
+                    <h3><i class="fas fa-clock"></i> 最新订单</h3>
+                    <div class="stat-value" id="latestOrder">-</div>
+                    <div class="stat-label">订单编号</div>
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button class="btn btn-primary" onclick="loadOrders()">
+                    <i class="fas fa-sync-alt"></i> 刷新数据
+                </button>
+                <button class="btn btn-success" onclick="loadLocalStorage()">
+                    <i class="fas fa-hdd"></i> 查看本地存储
+                </button>
+                <button class="btn btn-warning" onclick="exportData()">
+                    <i class="fas fa-download"></i> 导出数据
+                </button>
+                <button class="btn btn-danger" onclick="clearLocalData()">
+                    <i class="fas fa-trash"></i> 清除本地数据
+                </button>
+            </div>
+
+            <!-- 消息显示区域 -->
+            <div id="messageArea"></div>
+
+            <!-- 数据表格 -->
+            <div class="table-container">
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">
+                    <i class="fas fa-table"></i> 订单数据表
+                </h3>
+                <div id="loadingArea" class="loading">
+                    <i class="fas fa-spinner fa-spin"></i> 正在加载数据...
+                </div>
+                <div id="tableArea" style="display: none;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>订单编号</th>
+                                <th>设备ID</th>
+                                <th>VIP类型</th>
+                                <th>产品名称</th>
+                                <th>价格</th>
+                                <th>有效期</th>
+                                <th>支付状态</th>
+                                <th>支付方式</th>
+                                <th>创建时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- JSON数据查看器 -->
+            <div id="jsonViewer" class="json-viewer" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // 显示消息
+        function showMessage(message, type = 'info') {
+            const messageArea = document.getElementById('messageArea');
+            const className = type === 'error' ? 'error' : 'success';
+            messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+            setTimeout(() => {
+                messageArea.innerHTML = '';
+            }, 5000);
+        }
+
+        // 加载订单数据
+        async function loadOrders() {
+            document.getElementById('loadingArea').style.display = 'block';
+            document.getElementById('tableArea').style.display = 'none';
+            
+            try {
+                // 首先尝试从D1数据库加载
+                const response = await fetch('/api/orders');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        displayOrders(data.orders);
+                        updateStats(data.orders);
+                        showMessage('成功从D1数据库加载订单数据', 'success');
+                        return;
+                    }
+                }
+                
+                // 如果D1数据库不可用，从本地存储加载
+                loadLocalStorage();
+                
+            } catch (error) {
+                console.error('加载订单数据失败:', error);
+                loadLocalStorage();
+            }
+        }
+
+        // 从本地存储加载数据
+        function loadLocalStorage() {
+            try {
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                displayOrders(orders);
+                updateStats(orders);
+                showMessage(`从本地存储加载了 ${orders.length} 条订单记录`, 'success');
+            } catch (error) {
+                console.error('加载本地存储失败:', error);
+                showMessage('加载本地存储失败: ' + error.message, 'error');
+            }
+        }
+
+        // 显示订单数据
+        function displayOrders(orders) {
+            document.getElementById('loadingArea').style.display = 'none';
+            document.getElementById('tableArea').style.display = 'block';
+            
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+            
+            if (orders.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #7f8c8d;">暂无订单数据</td></tr>';
+                return;
+            }
+            
+            orders.forEach(order => {
+                const row = document.createElement('tr');
+                const createTime = new Date(order.createTime || order.create_time).toLocaleString('zh-CN');
+                const statusClass = order.paymentStatus === 'success' ? 'status-success' : 
+                                  order.paymentStatus === 'trial' ? 'status-trial' : 'status-failed';
+                
+                row.innerHTML = `
+                    <td>${order.orderNumber || order.order_number}</td>
+                    <td>${(order.deviceId || order.device_id || '').substring(0, 8)}...</td>
+                    <td>${order.vipType || order.vip_type}</td>
+                    <td>${order.productName || order.product_name}</td>
+                    <td>${order.price}</td>
+                    <td>${order.duration}</td>
+                    <td><span class="status-badge ${statusClass}">${order.paymentStatus || order.payment_status}</span></td>
+                    <td>${order.paymentMethod || order.payment_method}</td>
+                    <td>${createTime}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 更新统计信息
+        function updateStats(orders) {
+            const successCount = orders.filter(o => (o.paymentStatus || o.payment_status) === 'success').length;
+            const trialCount = orders.filter(o => (o.paymentStatus || o.payment_status) === 'trial').length;
+            const totalCount = orders.length;
+            const latestOrder = orders.length > 0 ? 
+                (orders[0].orderNumber || orders[0].order_number || '-') : '-';
+            
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('trialCount').textContent = trialCount;
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('latestOrder').textContent = latestOrder;
+        }
+
+        // 导出数据
+        function exportData() {
+            try {
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const dataStr = JSON.stringify(orders, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `orders_export_${new Date().toISOString().split('T')[0]}.json`;
+                link.click();
+                
+                showMessage('数据导出成功', 'success');
+            } catch (error) {
+                showMessage('导出失败: ' + error.message, 'error');
+            }
+        }
+
+        // 清除本地数据
+        function clearLocalData() {
+            if (confirm('确定要清除所有本地订单数据吗？此操作不可恢复！')) {
+                localStorage.removeItem('orders');
+                localStorage.removeItem('current_order_number');
+                localStorage.removeItem('vip_device_id');
+                localStorage.removeItem('vip_expiry');
+                localStorage.removeItem('vip_active');
+                localStorage.removeItem('vip_type');
+                
+                loadLocalStorage();
+                showMessage('本地数据已清除', 'success');
+            }
+        }
+
+        // 显示JSON数据
+        function showJSON(data) {
+            const jsonViewer = document.getElementById('jsonViewer');
+            jsonViewer.innerHTML = '<h4>原始JSON数据:</h4><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            jsonViewer.style.display = 'block';
+        }
+
+        // 页面加载时自动加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            
+            // 每30秒自动刷新一次
+            setInterval(loadOrders, 30000);
+        });
+    </script>
+</body>
+</html>

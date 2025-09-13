@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>初始化测试数据</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .btn:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #d4f8e8;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ 测试数据初始化工具</h1>
+        <p>这个工具可以帮您创建一些测试订单数据，以便在数据库管理页面查看效果。</p>
+        
+        <div class="info">
+            <strong>说明：</strong>由于D1数据库API在本地环境不可用，数据将保存到localStorage作为演示。
+        </div>
+        
+        <button class="btn" onclick="createTestOrders()">创建测试订单数据</button>
+        <button class="btn" onclick="clearAllData()">清除所有数据</button>
+        <button class="btn" onclick="viewDatabase()">查看数据库</button>
+        <button class="btn" onclick="goToPayPage()">返回支付页面</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function generateDeviceFingerprint() {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            ctx.textBaseline = "top";
+            ctx.font = "14px Arial";
+            ctx.fillText("Device fingerprint", 2, 2);
+
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + "x" + screen.height,
+                new Date().getTimezoneOffset(),
+                canvas.toDataURL(),
+            ].join("|");
+
+            return btoa(fingerprint).substring(0, 16);
+        }
+
+        function createTestOrders() {
+            const deviceId = generateDeviceFingerprint();
+            const currentTime = new Date().toISOString();
+            const currentYear = new Date().getFullYear();
+            
+            // 创建测试订单数据
+            const testOrders = [
+                {
+                    orderNumber: `ORD-${currentYear}-1001`,
+                    deviceId: deviceId,
+                    vipType: 'daily',
+                    productName: 'VIP会员服务（1天）',
+                    price: '￥3.3',
+                    duration: '1天',
+                    expiryTime: new Date().getTime() + 24 * 60 * 60 * 1000,
+                    paymentStatus: 'success',
+                    paymentMethod: 'qrcode',
+                    createTime: currentTime,
+                    updateTime: currentTime
+                },
+                {
+                    orderNumber: `ORD-${currentYear}-1002`,
+                    deviceId: deviceId,
+                    vipType: 'weekly',
+                    productName: 'VIP会员服务（7天）',
+                    price: '￥9.9',
+                    duration: '7天',
+                    expiryTime: new Date().getTime() + 7 * 24 * 60 * 60 * 1000,
+                    paymentStatus: 'trial',
+                    paymentMethod: 'trial',
+                    createTime: new Date(Date.now() - 60000).toISOString(),
+                    updateTime: new Date(Date.now() - 60000).toISOString()
+                },
+                {
+                    orderNumber: `ORD-${currentYear}-1003`,
+                    deviceId: deviceId.substring(0, 10) + 'DIFF06',
+                    vipType: 'daily',
+                    productName: 'VIP会员服务（1天）',
+                    price: '￥3.3',
+                    duration: '1天',
+                    expiryTime: new Date().getTime() + 24 * 60 * 60 * 1000,
+                    paymentStatus: 'success',
+                    paymentMethod: 'qrcode',
+                    createTime: new Date(Date.now() - 120000).toISOString(),
+                    updateTime: new Date(Date.now() - 120000).toISOString()
+                }
+            ];
+            
+            // 保存到localStorage
+            localStorage.setItem('orders', JSON.stringify(testOrders));
+            localStorage.setItem('current_order_number', '1003');
+            
+            // 设置VIP状态
+            localStorage.setItem('vip_device_id', deviceId);
+            localStorage.setItem('vip_expiry', testOrders[0].expiryTime);
+            localStorage.setItem('vip_active', 'true');
+            localStorage.setItem('vip_type', 'daily');
+            
+            document.getElementById('result').innerHTML = `
+                <div class="success">
+                    ✅ 成功创建了 ${testOrders.length} 条测试订单数据！<br>
+                    📊 包含：${testOrders.filter(o => o.paymentStatus === 'success').length} 个成功支付订单，${testOrders.filter(o => o.paymentStatus === 'trial').length} 个试用订单<br>
+                    🔢 当前订单编号：ORD-2025-1003<br>
+                    📱 设备ID：${deviceId}<br><br>
+                    现在您可以去数据库管理页面查看这些数据了！
+                </div>
+            `;
+        }
+        
+        function clearAllData() {
+            localStorage.removeItem('orders');
+            localStorage.removeItem('current_order_number');
+            localStorage.removeItem('vip_device_id');
+            localStorage.removeItem('vip_expiry');
+            localStorage.removeItem('vip_active');
+            localStorage.removeItem('vip_type');
+            
+            document.getElementById('result').innerHTML = `
+                <div class="success">
+                    🗑️ 所有测试数据已清除！
+                </div>
+            `;
+        }
+        
+        function viewDatabase() {
+            window.open('http://localhost:8000/database-admin.html', '_blank');
+        }
+        
+        function goToPayPage() {
+            window.open('http://localhost:8000/pay-debug.html', '_blank');
+        }
+        
+        // 页面加载时显示当前状态
+        document.addEventListener('DOMContentLoaded', function() {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const currentOrderNum = localStorage.getItem('current_order_number') || '未设置';
+            
+            if (orders.length > 0) {
+                document.getElementById('result').innerHTML = `
+                    <div class="info">
+                        📊 当前已有 ${orders.length} 条订单数据<br>
+                        🔢 当前订单编号：${currentOrderNum}<br>
+                        💡 您可以直接查看数据库或创建更多测试数据
+                    </div>
+                `;
+            } else {
+                document.getElementById('result').innerHTML = `
+                    <div class="info">
+                        📭 当前没有订单数据<br>
+                        💡 点击"创建测试订单数据"按钮来生成一些示例数据
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
