@@ -1,0 +1,11 @@
+name = "paysys-api"
+main = "src/handlers/orders.js"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "paysys-orders"
+database_id = "YOUR_DATABASE_ID_HERE"  # 替换为第二步创建的数据库ID
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
