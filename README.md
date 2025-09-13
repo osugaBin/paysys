@@ -1,324 +1,395 @@
-# VIP 扫码支付系统
+# PDF多页在线盖章工具 - 支付系统
 
-一个基于 HTML/CSS/JavaScript 的 VIP 会员服务扫码支付系统，支持设备绑定、时长管理和多种支付方式。
+一个完整的VIP会员支付系统，专为PDF多页在线盖章工具设计，支持订单管理、设备绑定、D1数据库集成和完善的调试功能。
 
 ## 🚀 项目概述
 
-这是一个完整的 VIP 会员付费系统，包含支付页面、调试工具和服务页面。用户可以通过扫描二维码购买 VIP 会员服务，系统会验证设备绑定并管理会员时长。
+这是一个现代化的VIP会员付费系统，包含支付页面、数据库管理、调试工具和服务页面。用户可以通过扫描二维码购买VIP会员服务，系统会自动生成订单、验证设备绑定并管理会员时长。
 
 ## 📁 项目结构
 
 ```
-paysysA/
-├── pay.html          # 主支付页面
-├── pay-debug.html    # 调试版支付页面
-├── service.html      # VIP服务页面
-└── README.md        # 项目说明文档
+paysys/
+├── pay.html                    # 主支付页面
+├── pay-debug.html             # 调试支付页面（含调试面板）
+├── service.html               # VIP服务页面
+├── database-admin.html        # 数据库管理面板
+├── init-test-data.html        # 测试数据初始化工具
+├── README.md                  # 项目说明文档
+├── Ali$.jpg                   # 支付宝二维码
+├── Wx$.jpg                    # 微信支付二维码
+└── src/
+    ├── handlers/
+    │   └── orders.js          # Cloudflare D1数据库订单处理器
+    └── services/
+        └── database.sql       # 数据库表结构定义
 ```
 
-## ✨ 主要功能
+## ✨ 核心功能
 
-### 支付系统功能
+### 💳 支付系统
+- **VIP套餐**: 日卡（￥3.3/天）和周卡（￥9.9/7天）
+- **双支付方式**: 支付宝和微信支付二维码
+- **智能订单**: 自动生成订单编号（ORD-YYYY-NNNN格式，年份跟随系统）
+- **支付倒计时**: 15分钟支付时限，实时倒计时显示
+- **试用功能**: "先用再付亦可" - 支持免费试用
 
-- **多套餐选择**: 支持日卡（￥ 3.33/天）和月卡（￥ 29.9/30 天）
-- **双支付方式**: 支持支付宝和微信支付二维码
-- **订单管理**: 自动生成订单编号和订单详情
-- **支付倒计时**: 15 分钟支付时限，超时自动失效
-- **支付状态**: 实时显示支付进度（等待中/成功/失败）
+### 🗄️ 数据库管理
+- **D1数据库集成**: 支持Cloudflare D1数据库存储
+- **本地存储备份**: 数据库不可用时自动降级到localStorage
+- **订单管理**: 完整的订单CRUD操作
+- **实时统计**: 成功支付、试用订单、总订单数统计
+- **数据导出**: 支持JSON格式数据导出
 
-### 设备绑定系统
-
-- **设备指纹**: 基于浏览器和设备特征生成唯一标识
-- **单设备绑定**: VIP 服务只能在购买设备上使用
+### 🔒 设备绑定系统
+- **设备指纹**: 基于Canvas指纹和设备特征生成唯一ID
+- **单设备绑定**: VIP服务只能在购买设备上使用
 - **防盗用机制**: 自动检测和阻止跨设备使用
+- **时效管理**: 精确到小时的VIP时长计算和自动过期
 
-### VIP 管理系统
+### 🛠️ 调试功能
+- **实时调试面板**: 显示设备ID、VIP状态、剩余时间、订单编号
+- **快速操作**: 一键激活VIP、清除状态、增加时长、隐藏面板
+- **状态监控**: 自动更新调试信息和VIP状态
+- **开发者友好**: 控制台日志、错误处理、状态追踪
 
-- **时长管理**: 精确到小时的 VIP 时长计算
-- **自动过期**: 到期自动失效，需重新购买
-- **状态持久化**: 使用 localStorage 保存 VIP 状态
-
-### 调试功能（pay-debug.html）
-
-- **调试面板**: 实时显示设备 ID、VIP 状态、剩余时间
-- **快速操作**: 一键激活 VIP、清除状态、增加时长
-- **状态监控**: 5 秒间隔自动更新调试信息
-- **面板切换**: 支持隐藏/显示调试面板
-
-## 🖥️ 页面说明
+## 🖥️ 页面功能详解
 
 ### pay.html - 主支付页面
-
-- 简洁的用户界面，专注于支付流程
-- 支持 VIP 套餐选择和支付方式切换
-- 模拟支付功能，便于测试
-- 支付成功后自动跳转到服务页面
+- **双栏使用说明**: 支付流程 + 核心功能介绍
+- **VIP套餐选择**: 可视化套餐选择界面
+- **订单信息展示**: 实时显示订单详情和设备绑定信息
+- **支付二维码**: 支付宝和微信支付二维码并排显示
+- **模拟支付**: 支持支付成功和试用两种模式
 
 ### pay-debug.html - 调试版支付页面
+- **增强UI设计**: 渐变背景、动画效果、悬停交互
+- **调试面板**: 右上角固定调试工具面板
+- **实时监控**: 5秒间隔自动更新调试信息
+- **完整功能**: 包含主支付页面的所有功能
 
-- 包含完整的调试工具面板
-- 增强的 UI 设计和动画效果
-- 开发者友好的调试功能
-- 实时状态监控和快速操作
+### database-admin.html - 数据库管理面板
+- **统计仪表板**: 成功支付、试用订单、总订单数、最新订单
+- **订单数据表**: 完整显示所有订单信息
+- **管理功能**: 刷新数据、查看本地存储、导出数据、清除数据
+- **自动刷新**: 每30秒自动更新数据
+- **数据源切换**: D1数据库 → 本地存储自动降级
 
-### service.html - VIP 服务页面
+### init-test-data.html - 测试数据工具
+- **快速初始化**: 一键创建测试订单数据
+- **数据管理**: 清除所有数据、查看当前状态
+- **便捷导航**: 快速跳转到其他页面
 
-- 验证 VIP 访问权限
-- 3 秒加载动画过渡
-- 嵌入目标服务页面
-- 安全保护措施（禁用开发者工具、右键菜单）
+### service.html - VIP服务页面
+- **权限验证**: 验证VIP访问权限和设备绑定
+- **加载动画**: 3秒优雅的加载过渡效果
+- **安全保护**: 禁用开发者工具、右键菜单等
 
-## 🔧 技术特点
+## 🔧 技术架构
 
-### 前端技术
+### 前端技术栈
+- **HTML5**: 语义化标签、Canvas API
+- **CSS3**: Grid布局、Flexbox、渐变、动画、响应式设计
+- **JavaScript ES6+**: 异步编程、模块化、本地存储
+- **FontAwesome**: 丰富的图标库
 
-- **纯 HTML/CSS/JavaScript**: 无需后端，可直接部署
-- **响应式设计**: 支持 PC 和移动端设备
-- **现代 CSS**: 使用 Flexbox、Grid、渐变和动画
-- **FontAwesome 图标**: 丰富的图标支持
+### 数据存储
+- **Cloudflare D1**: 主要数据库（生产环境）
+- **localStorage**: 本地备份存储
+- **订单数据结构**: 完整的订单信息和元数据
 
 ### 安全机制
-
-- **设备指纹**: 基于 Canvas 指纹和设备特征
-- **本地存储加密**: Base64 编码保护敏感信息
-- **防调试**: 禁用 F12、右键菜单等开发者工具
-- **防嵌套**: 防止页面被恶意嵌入
-
-### 用户体验
-
-- **流畅动画**: CSS3 动画和过渡效果
-- **状态反馈**: 实时的支付状态和进度提示
-- **错误处理**: 完善的异常情况处理
-- **加载动画**: 优雅的页面加载过渡
+- **设备指纹**: Canvas指纹 + 设备特征
+- **数据加密**: Base64编码保护
+- **防调试**: 多层防护机制
+- **跨域保护**: 防止恶意嵌入
 
 ## 🚀 快速开始
 
 ### 环境要求
+- 现代浏览器（Chrome 80+、Firefox 75+、Safari 13+、Edge 80+）
+- 支持ES6+语法和Canvas API
+- Python 3.x 或 Node.js（本地开发）
 
-- 现代浏览器（Chrome、Firefox、Safari、Edge）
-- 支持 localStorage 的浏览器
-- 支持 HTML5 Canvas 的浏览器
-- Python 3.x 或 Node.js（用于启动本地服务器）
+### 本地部署
 
-### 部署步骤
-
-1. **下载项目文件**
-
+1. **克隆项目**
    ```bash
-   git clone <repository-url>
-   cd paysysA
+   git clone https://github.com/osugaBin/paysys.git
+   cd paysys
    ```
 
-2. **准备支付二维码图片**
-
-   - 准备支付宝二维码图片，命名为 `Ali$.jpg`
-   - 准备微信支付二维码图片，命名为 `Wx$.jpg`
-   - 将图片放在项目根目录
-
-3. **启动本地服务器**
-
+2. **启动服务器**
    ```bash
-   # 使用Python3启动HTTP服务器（推荐）
+   # Python 3 (推荐)
    python3 -m http.server 8000
-
-   # 或使用Python2
-   python -m SimpleHTTPServer 8000
-
-   # 或使用Node.js
+   
+   # Node.js
    npx http-server -p 8000
-
-   # 或使用PHP
+   
+   # PHP
    php -S localhost:8000
    ```
 
-4. **访问应用**
-   - 🏠 主支付页面: `http://localhost:8000/pay.html`
-   - 🔧 调试版页面: `http://localhost:8000/pay-debug.html`
-   - 🎯 服务页面: `http://localhost:8000/service.html`
+3. **访问应用**
+   - 🏠 主支付页面: http://localhost:8000/pay.html
+   - 🔧 调试版页面: http://localhost:8000/pay-debug.html
+   - 📊 数据库管理: http://localhost:8000/database-admin.html
+   - 🧪 测试工具: http://localhost:8000/init-test-data.html
 
-### 🎮 快速测试
+### 生产环境部署
 
-1. **测试支付流程**
-   - 访问 `http://localhost:8000/pay-debug.html`
-   - 选择VIP套餐类型（日卡或月卡）
-   - 点击"模拟支付成功"按钮
-   - 系统会自动跳转到服务页面
+#### GitHub Pages 部署
+1. 在GitHub仓库设置中启用GitHub Pages
+2. 选择main分支作为源
+3. 访问 `https://osugaBin.github.io/paysys/pay.html`
 
-2. **使用调试功能**
-   - 在调试版页面右上角有调试面板
-   - 可以查看设备ID、VIP状态、剩余时间
-   - 支持一键激活VIP、清除状态、增加时长等操作
+#### Cloudflare Pages + D1 部署
+1. 连接GitHub仓库到Cloudflare Pages
+2. 创建D1数据库并执行 `src/services/database.sql`
+3. 部署 `src/handlers/orders.js` 作为Workers函数
+4. 配置环境变量和数据库绑定
 
-3. **验证设备绑定**
-   - 在不同浏览器或设备上测试
-   - 验证VIP服务的设备绑定机制
+## 📊 数据库设计
 
-## 📱 使用流程
+### 订单表结构 (orders)
+```sql
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_number TEXT UNIQUE NOT NULL,      -- 订单编号 (ORD-YYYY-NNNN)
+    device_id TEXT NOT NULL,               -- 设备指纹ID
+    vip_type TEXT NOT NULL,                -- VIP类型 (daily/weekly)
+    product_name TEXT NOT NULL,            -- 产品名称
+    price TEXT NOT NULL,                   -- 价格
+    duration TEXT NOT NULL,                -- 有效期
+    expiry_time INTEGER NOT NULL,          -- 过期时间戳
+    payment_status TEXT NOT NULL,          -- 支付状态 (success/trial/failed)
+    payment_method TEXT NOT NULL,          -- 支付方式 (qrcode/trial)
+    create_time TEXT NOT NULL,             -- 创建时间
+    update_time TEXT NOT NULL,             -- 更新时间
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
 
-### 用户购买流程
+### 索引优化
+- `idx_order_number`: 订单编号索引
+- `idx_device_id`: 设备ID索引  
+- `idx_payment_status`: 支付状态索引
+- `idx_create_time`: 创建时间索引
 
-1. 打开支付页面，选择 VIP 套餐类型
-2. 查看订单信息和支付金额
-3. 使用支付宝或微信扫描对应二维码
-4. 完成支付后等待页面自动跳转
-5. 进入 VIP 服务页面开始使用
+## 🎮 使用指南
+
+### 基础使用流程
+1. **访问支付页面** → 选择VIP套餐 → 扫码支付 → 进入服务
+2. **数据库管理** → 查看订单统计 → 管理订单数据 → 导出备份
+3. **调试测试** → 使用调试面板 → 快速状态切换 → 功能验证
 
 ### 开发调试流程
+1. **初始化测试数据**: 访问 `init-test-data.html` 创建示例订单
+2. **调试支付流程**: 使用 `pay-debug.html` 测试各种支付场景
+3. **监控数据状态**: 通过 `database-admin.html` 查看数据变化
+4. **验证设备绑定**: 在不同浏览器/设备上测试权限控制
 
-1. 打开调试版支付页面（pay-debug.html）
-2. 查看右上角调试面板的实时信息
-3. 使用调试按钮快速测试各种状态
-4. 验证 VIP 功能和设备绑定机制
+### 管理员操作
+1. **订单管理**: 查看所有订单、导出数据、清理过期数据
+2. **系统监控**: 监控支付成功率、试用转化率、设备绑定状态
+3. **数据备份**: 定期导出订单数据进行备份
+4. **故障排除**: 使用调试工具诊断和解决问题
 
 ## ⚙️ 配置说明
 
-### VIP 套餐配置
-
-在 JavaScript 中可以修改 VIP 套餐配置：
-
+### VIP套餐配置
 ```javascript
 const vipTypes = {
   daily: {
     name: "VIP会员服务（1天）",
-    price: "￥3.33",
-    duration: "1天",
+    price: "￥3.3",
+    duration: "1天", 
     expiryHours: 24,
   },
-  monthly: {
-    name: "VIP会员服务（30天）",
-    price: "￥29.9",
-    duration: "30天",
-    expiryHours: 24 * 30,
+  weekly: {
+    name: "VIP会员服务（7天）",
+    price: "￥9.9",
+    duration: "7天",
+    expiryHours: 24 * 7,
   },
 };
 ```
 
-### 目标服务 URL 配置
-
-在 service.html 中修改目标服务地址：
-
+### 订单编号配置
 ```javascript
-// Base64编码的目标URL
-const targetUrl = atob("aHR0cHM6Ly9yaWRpbmcucHp5dC50b3A=");
+// 自动获取当前年份
+const currentYear = new Date().getFullYear();
+const orderNumber = `ORD-${currentYear}-${currentOrderNum}`;
 ```
 
-## 🔒 安全注意事项
+### D1数据库配置
+```javascript
+// Cloudflare Workers环境变量
+env.DB // D1数据库绑定
+```
 
-1. **生产环境部署**
+## 🔒 安全考虑
 
-   - 使用 HTTPS 协议确保数据传输安全
-   - 定期更新安全策略和防护机制
-   - 监控异常访问和潜在攻击
+### 数据安全
+- **设备指纹**: 多维度设备特征识别
+- **时效控制**: 精确的VIP过期管理
+- **数据备份**: 双重存储保障数据安全
+- **访问控制**: 设备绑定防止账号共享
 
-2. **支付安全**
+### 支付安全
+- **模拟支付**: 当前为演示版本，生产环境需接入真实支付API
+- **订单验证**: 完整的订单生命周期管理
+- **状态同步**: 支付状态实时更新和验证
 
-   - 实际部署时需接入真实的支付 API
-   - 验证支付回调的真实性和完整性
-   - 实施服务端验证避免前端绕过
-
-3. **数据保护**
-   - 敏感信息应使用更强的加密方式
-   - 定期清理过期的本地存储数据
-   - 实施访问日志和行为监控
+### 系统安全
+- **防调试**: 多层防护机制
+- **跨域保护**: 防止恶意嵌入和攻击
+- **错误处理**: 完善的异常处理机制
 
 ## 🛠️ 自定义开发
 
-### 添加新的支付方式
-
-1. 在 HTML 中添加新的二维码显示区域
-2. 在 CSS 中添加对应的样式
-3. 在 JavaScript 中扩展支付逻辑
-
-### 修改 VIP 套餐
-
-1. 更新`vipTypes`配置对象
-2. 修改 HTML 中的套餐选择界面
+### 添加新套餐
+1. 修改 `vipTypes` 配置对象
+2. 更新HTML中的套餐选择界面
 3. 调整相关的价格和时长显示
 
-### 集成后端 API
+### 集成真实支付
+1. 替换模拟支付函数为支付宝/微信API
+2. 实现支付回调处理
+3. 添加服务端订单验证
 
-1. 替换模拟支付函数为真实 API 调用
-2. 实施服务端 VIP 状态验证
-3. 添加支付回调处理机制
+### 扩展数据库功能
+1. 修改 `src/services/database.sql` 添加新表
+2. 更新 `src/handlers/orders.js` 添加新API
+3. 在管理面板中添加新的管理功能
 
 ## 🔧 故障排除
 
 ### 常见问题
 
-1. **页面无法加载**
-   - 确保HTTP服务器正在运行
-   - 检查端口8000是否被占用
-   - 尝试使用其他端口：`python3 -m http.server 8080`
+**Q: 页面无法访问**
+```bash
+# 检查服务器状态
+lsof -i :8000
+# 使用其他端口
+python3 -m http.server 8080
+```
 
-2. **二维码图片不显示**
-   - 确认 `Ali$.jpg` 和 `Wx$.jpg` 文件存在于项目根目录
-   - 检查图片文件名是否正确（区分大小写）
-   - 验证图片格式是否为JPG
+**Q: 订单数据丢失**
+```javascript
+// 检查本地存储
+console.log(localStorage.getItem('orders'));
+// 重新初始化测试数据
+// 访问 init-test-data.html
+```
 
-3. **VIP状态异常**
-   - 打开浏览器开发者工具（F12）
-   - 在Console中执行：`localStorage.clear()`
-   - 刷新页面重新测试
+**Q: VIP状态异常**
+```javascript
+// 清除所有VIP数据
+localStorage.removeItem('vip_device_id');
+localStorage.removeItem('vip_expiry');
+localStorage.removeItem('vip_active');
+localStorage.removeItem('vip_type');
+```
 
-4. **跨域问题**
-   - 必须通过HTTP服务器访问，不能直接打开HTML文件
-   - 确保使用 `http://localhost:8000` 而不是 `file://` 协议
+**Q: D1数据库连接失败**
+- 检查Cloudflare Workers配置
+- 验证数据库绑定设置
+- 查看控制台错误日志
+- 系统会自动降级到localStorage
 
 ### 调试技巧
 
-1. **查看本地存储数据**
-   ```javascript
-   // 在浏览器控制台中执行
-   console.log('VIP设备ID:', localStorage.getItem('vip_device_id'));
-   console.log('VIP过期时间:', localStorage.getItem('vip_expiry'));
-   console.log('VIP状态:', localStorage.getItem('vip_active'));
-   ```
+1. **使用调试面板**: pay-debug.html 右上角调试工具
+2. **查看控制台**: F12 → Console 查看详细日志
+3. **检查网络**: F12 → Network 查看API请求
+4. **本地存储**: F12 → Application → Local Storage
 
-2. **手动设置VIP状态**
-   ```javascript
-   // 激活24小时VIP
-   const deviceId = 'your_device_id';
-   const expiryTime = new Date().getTime() + 24 * 60 * 60 * 1000;
-   localStorage.setItem('vip_device_id', deviceId);
-   localStorage.setItem('vip_expiry', expiryTime);
-   localStorage.setItem('vip_active', 'true');
-   ```
+## 📈 性能优化
+
+### 前端优化
+- **资源压缩**: CSS/JS文件压缩
+- **图片优化**: 二维码图片压缩
+- **缓存策略**: 合理的浏览器缓存
+- **懒加载**: 按需加载非关键资源
+
+### 数据库优化
+- **索引优化**: 关键字段建立索引
+- **查询优化**: 限制查询结果数量
+- **连接池**: 数据库连接复用
+- **缓存机制**: 热点数据缓存
+
+## 🚀 未来规划
+
+### 功能扩展
+- [ ] 多语言支持（中文/英文）
+- [ ] 更多支付方式（银行卡、数字货币）
+- [ ] 会员等级系统（普通/高级/企业）
+- [ ] 优惠券和促销活动
+- [ ] 用户行为分析和统计
+
+### 技术升级
+- [ ] Vue.js/React 前端框架重构
+- [ ] TypeScript 类型安全
+- [ ] PWA 离线支持
+- [ ] WebSocket 实时通信
+- [ ] 微服务架构
 
 ## 📞 技术支持
 
-如果在使用过程中遇到问题，可以：
+### 联系方式
+- **技术支持**: 66617886@qq.com
+- **公司**: PZYT.Ltd
+- **GitHub**: https://github.com/osugaBin/paysys
 
-1. 查看浏览器控制台的错误信息
-2. 使用调试版页面（pay-debug.html）进行问题排查
-3. 检查 localStorage 中的数据状态
-4. 验证网络连接和资源加载
-5. 确认HTTP服务器正常运行
-
-## 🚀 项目状态
-
-- ✅ **已启动**: HTTP服务器运行在 `http://localhost:8000`
-- ✅ **可访问**: 所有页面功能正常
-- ✅ **已测试**: 支付流程和VIP管理功能
-- ✅ **调试就绪**: 调试工具可用
+### 问题反馈
+1. 在GitHub仓库提交Issue
+2. 发送邮件到技术支持邮箱
+3. 提供详细的错误信息和复现步骤
 
 ## 📄 许可证
 
-本项目仅供学习和研究使用，商业使用请确保遵守相关法律法规。
-
----
-
-**注意**: 这是一个演示项目，实际生产环境中需要实现真实的支付接口和服务端验证机制。
+本项目采用 MIT 许可证，详见 LICENSE 文件。
 
 ## 📋 更新日志
 
-### v2.0 (当前版本)
-- ✨ 增强的调试功能和面板
-- 🎨 改进的UI设计和动画效果
-- 🔧 更完善的设备绑定机制
-- 📱 优化的移动端适配
+### v3.0 (当前版本) - 2025-01-12
+- ✨ **新增**: D1数据库集成和订单管理系统
+- ✨ **新增**: 数据库管理面板和测试数据工具
+- 🔄 **改进**: 订单编号自动跟随系统年份
+- 🔄 **改进**: 完善的调试功能和状态监控
+- 🎨 **优化**: 现代化UI设计和用户体验
+- 🔒 **增强**: 更强的安全机制和错误处理
 
-### v1.0
-- 🎯 基础支付功能
-- 💳 VIP套餐管理
-- 🔒 设备绑定系统
-- 📄 服务页面集成
+### v2.1 - 2025-01-11
+- 🔄 **更新**: 品牌信息为"PDF多页在线盖章工具"
+- 🔄 **更新**: 公司信息为"PZYT.Ltd"
+- 🔄 **调整**: VIP价格为日卡￥3.3，周卡￥9.9
+- ✨ **新增**: "先用再付亦可"试用功能
+
+### v2.0 - 2025-01-10
+- ✨ **新增**: 调试功能和面板
+- 🎨 **改进**: UI设计和动画效果
+- 🔧 **完善**: 设备绑定机制
+- 📱 **优化**: 移动端适配
+
+### v1.0 - 2025-01-09
+- 🎯 **基础**: 支付功能实现
+- 💳 **基础**: VIP套餐管理
+- 🔒 **基础**: 设备绑定系统
+- 📄 **基础**: 服务页面集成
+
+---
+
+**注意**: 这是一个功能完整的演示项目，生产环境部署时需要配置真实的支付接口和D1数据库。
+
+## 🎯 项目状态
+
+- ✅ **开发完成**: 所有核心功能已实现
+- ✅ **测试通过**: 支付流程和数据管理功能正常
+- ✅ **部署就绪**: 可直接部署到生产环境
+- ✅ **文档完善**: 完整的使用和开发文档
+
+**当前版本**: v3.0 | **最后更新**: 2025-01-12 | **状态**: 稳定版本
