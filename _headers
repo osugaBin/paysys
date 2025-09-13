@@ -1,17 +1,24 @@
-# 生产环境安全头配置
+# Cloudflare Pages 安全头配置
 /*
-  X-Frame-Options: DENY
+  X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   X-XSS-Protection: 1; mode=block
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
 
-# 禁止访问调试和测试页面
-/pay-debug.html
-  X-Robots-Tag: noindex, nofollow
-  
-/database-admin.html
-  X-Robots-Tag: noindex, nofollow
-  
-/init-test-data.html
-  X-Robots-Tag: noindex, nofollow
+# 允许同源跳转和资源加载
+/*.html
+  Content-Security-Policy: default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' *.pages.dev *.workers.dev; frame-ancestors 'self'
+
+# 静态资源缓存
+/*.jpg
+  Cache-Control: public, max-age=31536000
+
+/*.png
+  Cache-Control: public, max-age=31536000
+
+/*.css
+  Cache-Control: public, max-age=31536000
+
+/*.js
+  Cache-Control: public, max-age=86400

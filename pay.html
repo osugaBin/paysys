@@ -653,9 +653,9 @@
             // 保存订单到数据库
             saveOrderToD1(orderData);
             
-            // 跳转到服务页面
+            // 跳转到服务页面 - 使用相对路径兼容Cloudflare Pages
             setTimeout(() => {
-                window.location.href = 'service.html';
+                window.location.href = './service.html';
             }, 1000);
         }
 

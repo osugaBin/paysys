@@ -1,0 +1,15 @@
+# Cloudflare Pages 重定向配置
+
+# 主页重定向到支付页面
+/  /pay.html  200
+
+# 确保所有HTML页面都能正常访问
+/pay  /pay.html  200
+/service  /service.html  200
+/index  /pay.html  200
+
+# API路由重定向到Workers
+/api/*  https://paysys-api.你的子域名.workers.dev/api/:splat  200
+
+# 404页面重定向到主页
+/*  /pay.html  404
