@@ -104,7 +104,7 @@
     <script>
         // 检查VIP状态
         function checkVIPAccess() {
-            const deviceId = generateDeviceFingerprint();
+            const deviceId = generateDeviceId();
             const savedDeviceId = localStorage.getItem("vip_device_id");
             const expiryTime = localStorage.getItem("vip_expiry");
             const isActive = localStorage.getItem("vip_active");
@@ -114,28 +114,32 @@
                 new Date().getTime() > parseInt(expiryTime) || 
                 isActive !== "true") {
                 // 未授权访问，跳转回支付页面
-                window.location.href = 'pay-debug.html';
+                alert('VIP权限已过期或设备不匹配，请重新购买');
+                window.location.href = 'pay.html';
                 return false;
             }
             return true;
         }
         
-        function generateDeviceFingerprint() {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            ctx.textBaseline = "top";
-            ctx.font = "14px Arial";
-            ctx.fillText("Device fingerprint", 2, 2);
-
-            const fingerprint = [
-                navigator.userAgent,
-                navigator.language,
-                screen.width + "x" + screen.height,
-                new Date().getTimezoneOffset(),
-                canvas.toDataURL(),
-            ].join("|");
-
-            return btoa(fingerprint).substring(0, 16);
+        // 设备指纹生成（与pay.html保持一致）
+        function generateDeviceId() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Device fingerprint', 2, 2);
+            
+            const fingerprint = canvas.toDataURL();
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screen: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                fingerprint: fingerprint
+            };
+            
+            return btoa(JSON.stringify(deviceInfo)).substring(0, 16);
         }
         
         // 页面加载完成后执行
